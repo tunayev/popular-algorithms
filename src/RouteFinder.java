@@ -79,10 +79,23 @@ public class RouteFinder {
         //printResult(yList);
         //System.out.println(calculateRoute(xList, yList, startPoint));
         double[][] initialRoute = new double[allCoordinates.length+1][2];
-        createInitialRoute(allCoordinates, initialRoute, startPoint);
-        double[][] newCoor = {{0.1363, 0.9225},{0.9125, 0.9213},{0.8025, 0.17},{0.8525, 0.22},{0.8725, 0.15},{0.0813, 0.1075},{0.8725, 0.15},{0.0813, 0.1075},{0.8725, 0.15},{0.0813, 0.1075}};
-        //createPerm(10, initialRoute);
-        System.out.println("finish");
+        int[] initialPoints = new int[allCoordinates.length+1];
+        int[] idealPoints = new int[allCoordinates.length+1];
+        createInitialRoute(allCoordinates, initialRoute, initialPoints, startPoint);
+
+        double[][] newCoor = {{0.525, 0.4538},{0.5725,0.4962},{0.5488,0.5938},{0.4788,0.6200},{0.1363,0.9225},{0.9125,0.9213},{0.8525,0.2200},{0.8725,0.1500},{0.8025,0.1700},{0.0813,0.1075},{0.4038,0.4875},{0.45, 0.445},{0.525, 0.4538}};
+
+        // Create an array to store the shortest distance, to take advantage from passing as reference
+        double[] shortestDistance = { Double.MAX_VALUE };
+        double[][] idealRoute = new double[initialRoute.length][2];
+        System.arraycopy(initialRoute, 0, idealRoute, 0 , initialRoute.length);
+
+        createPerm(1, initialRoute, initialPoints, shortestDistance, idealRoute, idealPoints);
+        /*printCoordinates(initialRoute);
+        printArray(initialPoints);*/
+        System.out.println(calculateRoute(newCoor));
+        System.out.println("\n shortest:" + shortestDistance[0]);
+        System.out.println(Arrays.toString(idealPoints));
         /*double[] p1 = {0.8913,0.1850};
         double[] p2 = {0.3438,0.1875};
         System.out.println(calculateDistance(p1, p2));*/
@@ -118,24 +131,11 @@ public class RouteFinder {
     /*
         Calculate the fastest route
      */
-    public static double calculateRoute(ArrayList<Double> xList, ArrayList<Double> yList, int startPoint) {
-        boolean[] isVisited = new boolean[xList.size()];
-        isVisited[startPoint] = true;
+    public static double calculateRoute(double[][] route) {
         double totalDistance = 0;
 
-        for(int i = 0; i < xList.size()-1; i++) {
-            if(isVisited[i] != true) {
-                double[] pointOne = {xList.get(i), yList.get(i)};
-                isVisited[i] = true;
-                for (int j = 0; j < xList.size();j++) {
-                    if (j != i && isVisited[j] != true) {
-                        double[] pointTwo = {xList.get(j), yList.get(j)};
-                        totalDistance += calculateDistance(pointOne, pointTwo);
-                        //isVisited[j] = true;
-                        System.out.println(j);
-                    }
-                }
-            }
+        for(int i = 0; i < route.length-1; i++) {
+            totalDistance += calculateDistance(route[i], route[i+1]);
         }
         //todo
         return totalDistance;
@@ -155,17 +155,25 @@ public class RouteFinder {
             System.out.println(myList.get(i));
         }
     }
-    public static void createPerm(int index, double[][] elements) {
+    public static void createPerm(int index, double[][] elements, int[] initialPoints, double[] shortestDistance, double[][] idealRoute, int[] idealPoints) {
 
         if(index == elements.length-1) {
-            printCoordinates(elements);
-
+            /*printCoordinates(elements);
+            System.out.println(Arrays.toString(points));*/
+            double distance = calculateRoute(elements);
+            if (distance < shortestDistance[0]) {
+                shortestDistance[0] = distance;
+                System.arraycopy(elements, 0, idealRoute, 0, elements.length);
+                System.arraycopy(initialPoints, 0, idealPoints, 0, initialPoints.length);
+            }
             return;
         } else {
-            for (int i = index; i < elements.length; i++){
+            for (int i = index; i < elements.length-1; i++){
                 swap(elements, i, index);
-                createPerm(index+1, elements);
+                swapInt(initialPoints, i, index);
+                createPerm(index+1, elements, initialPoints, shortestDistance, idealRoute, idealPoints);
                 swap(elements, i, index);
+                swapInt(initialPoints, i, index);
 
             }
         }
@@ -173,6 +181,12 @@ public class RouteFinder {
 
     private static void swap(double[][] input, int a, int b) {
         double tmp[] = input[a];
+        input[a] = input[b];
+        input[b] = tmp;
+    }
+
+    private static void swapInt(int[] input, int a, int b) {
+        int tmp = input[a];
         input[a] = input[b];
         input[b] = tmp;
     }
@@ -191,13 +205,24 @@ public class RouteFinder {
         }
     }
 
-    private static void createInitialRoute(double[][] coordinates, double[][] initialRoute, int startPoint) {
+    private static void createInitialRoute(double[][] coordinates, double[][] initialRoute, int[] initialPoints, int startPoint) {
+        // Create the coordinates array for initial route
         System.arraycopy(coordinates, 0, initialRoute, 0, coordinates.length);
         double[] temp = initialRoute[startPoint];
         initialRoute[startPoint] = initialRoute[0];
         initialRoute[0] = temp;
         initialRoute[initialRoute.length-1] = temp;
-        printCoordinates(initialRoute);
+        //printCoordinates(initialRoute);
+
+        // Create the points array for initial route
+        for(int i = 0; i < initialPoints.length-1; i++) {
+            initialPoints[i] = i+1;
+        }
+        int tmp = initialPoints[startPoint];
+        initialPoints[startPoint] = initialPoints[0];
+        initialPoints[0] = tmp;
+        initialPoints[initialRoute.length-1] = tmp;
+
         /*initialRoute[0] = startPoint;
         initialRoute[initialRoute.length-1] = startPoint;
         for(int i =1; i < initialRoute.length-1; i++) {

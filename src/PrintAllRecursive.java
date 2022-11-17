@@ -3,18 +3,21 @@ import java.util.Arrays;
 public class PrintAllRecursive {
     public static void main(String[] args) {
         int[] arr = {1, 2, 3, 4, 5, 6};
-        int[] arr2 = new int[arr.length];
+        int[] arr2 = {10, 20, 30, 40, 50, 60};
 
-        createPerm(2, arr);
+        createPerm(0, arr, arr2);
     }
-    public static void createPerm(int index, int[] elements) {
+    public static void createPerm(int index, int[] elements, int[] arr2) {
         if(index == elements.length-1) {
             printArray(elements);
+            printArray(arr2);
             return;
         } else {
             for (int i = index; i < elements.length-1; i++){
                 swap(elements, i, index);
-                createPerm(index+1, elements);
+                swap(arr2, i, index);
+                createPerm(index+1, elements, arr2);
+                swap(arr2, i, index);
                 swap(elements, i, index);
             }
         }
